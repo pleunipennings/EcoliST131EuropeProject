@@ -1,0 +1,56 @@
+---
+title: "Experiment Code"
+author: "Sara"
+date: "2024-10-21"
+output: html_document
+---
+
+```{r}
+# Set the working directory to the folder where your file is located
+setwd("C:/Users/patron/Desktop/R Studio")
+
+# Check if the working directory is set correctly
+getwd()
+
+# List files in the working directory to ensure the file exists
+list.files()
+
+# Load the CSV file
+Japan <- read.csv("Japan.csv")
+
+# View the first few rows of the dataset to confirm it's loaded correctly
+head(Japan)
+
+```
+
+```{r}
+# Install necessary packages if not already installed
+if (!require("readxl")) install.packages("readxl")
+if (!require("dplyr")) install.packages("dplyr")
+if (!require("stringr")) install.packages("stringr")
+if (!require("ggplot2")) install.packages("ggplot2")
+
+# Load the libraries
+library(readxl)
+library(dplyr)
+library(stringr)
+library(ggplot2)
+```
+
+```{r}
+# Load necessary libraries
+library(dplyr)
+
+# Function to count human data
+count_human_data <- function(data) {
+  human_count <- data %>%
+    filter(Source.Type == "Human") %>%
+    nrow()
+  return(human_count)
+}
+
+# Example usage
+total_human_data <- count_human_data(Japan)
+print(total_human_data)
+```
+
