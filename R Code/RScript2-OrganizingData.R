@@ -6,113 +6,54 @@ getwd()
 # List all CSV files in the directory
 file_list <- list.files(pattern = "*.csv")
 
+# Stop if no CSV files are found
+if (length(file_list) == 0) {
+  stop("No CSV files found in the directory.")
+}
+
 # Create an empty list to store data frames
 data_list <- list()
 
-# Loop through each file and read the CSV
+# Loop through each file in file_list, read it, and add a country column
 for (file in file_list) {
-  # Read the CSV file
   data <- read.csv(file)
   
-  # Optionally, add a column to track the country (based on file name)
-  data$Country <- gsub(".csv", "", file)
+  # Add a column to track the country (based on file name)
+  data$Country <- gsub(".csv","", file)
   
-  # Store the data frame in the list
+  # Append to data_list
   data_list[[file]] <- data
 }
 
 # Combine all data frames into one large data frame
 combined_data <- do.call(rbind, data_list)
 
-# View the combined data
-head(combined_data)
+# Verify if ST131 entries exist in the filtered data
+st131_check <- combined_data %>%
+  filter(Source.Type == "Human", Collection.Year >= 2010, Collection.Year <= 2024, ST == "ST131")
 
-# List all CSV files in the directory
-file_list <- list.files(pattern = "*.csv")
+print("Number of ST131 records in human sources (2010-2024):")
+print(nrow(st131_check))  # Check if any ST131 records exist
 
-# Create an empty list to store data frames
-data_list <- list()
-
-# Create a list to store the count of human entries per country
-human_counts <- list()
-
-# Loop through each file and read the CSV
-for (file in file_list) {
-  # Read the CSV file
-  data <- read.csv(file)
-  
-  # Add a column to track the country (based on file name)
-  country_name <- gsub(".csv", "", file)
-  data$Country <- country_name
-  
-  # Count the number of "Human" entries in the "Source Type" column
-  human_count <- data %>%
-    filter(Source.Type == "Human") %>%
-    nrow()
-  
-  # Store the human count in the list
-  human_counts[[country_name]] <- human_count
-  
-  # Store the data frame in the list for future use if needed
-  data_list[[file]] <- data
-}
-
-# Print the total number of human entries for each country
-print(human_counts)
-
-# Function to filter data for years 2010 to 2024
-filter_years <- function(data) {
-  filtered_data <- data %>%
-    filter(Collection.Year >= 2010 & Collection.Year <= 2024)
-  return(filtered_data)
-}
-
-# Function to calculate the percentage of ST131 in human sources
-calculate_st131_percentage_human <- function(data) {
-  # Filter for human sources only
-  human_data <- data %>%
-    filter(Source.Type == "Human")
-  
-  # Count the total number of human records
-  total_human_count <- nrow(human_data)
-  
-  # Count the number of ST131 entries in human sources
-  st131_human_count <- human_data %>%
-    filter(ST == "ST131") %>%
-    nrow()
-  
-  # Calculate the percentage of ST131 in human sources
-  if (total_human_count == 0) {
-    return(0)  # Return 0% if no human data is found
-  }
-  
-  percentage_st131_human <- (st131_human_count / total_human_count) * 100
-  return(percentage_st131_human)
-}
-
-# Example usage inside your loop:
-# percentage_st131_human <- calculate_st131_percentage_human(data)
-
-
-# Load necessary libraries
-library(ggplot2)
-
-# Assume 'combined_filtered_data' is the combined dataset with data from all countries
-# Group the data by Country and Collection Year, calculate ST131 percentage for human sources
-
-# Create a summarized dataset for plotting
-summary_data <- combined_filtered_data %>%
+# Summarize data for plotting
+library(dplyr)
+summary_data <- combined_data %>%
   filter(Source.Type == "Human", Collection.Year >= 2010, Collection.Year <= 2024) %>%
   group_by(Country, Collection.Year) %>%
   summarise(
     total_human = n(),
-    st131_count = sum(ST == "ST131"),
-    st131_percentage = (st131_count / total_human) * 100
+    st131_count = sum(ST == "ST131", na.rm = TRUE),  # Counts "ST131" cases
+    st131_percentage = ifelse(total_human > 0, (st131_count / total_human) * 100, 0)
   )
 
+# Print summary data to verify calculations before plotting
+print("Summary Data for Plotting:")
+print(head(summary_data))
+
 # Create the line plot using ggplot
+library(ggplot2)
 ggplot(summary_data, aes(x = Collection.Year, y = st131_percentage, color = Country, group = Country)) +
-  geom_line(size = 1.2) +
+  geom_line(linewidth = 1.2) +
   labs(title = "ST131 Percentage in Human Sources (2010-2024)",
        x = "Year",
        y = "ST131 Percentage",
