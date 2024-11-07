@@ -1,5 +1,7 @@
 # Set working directory
 setwd("C:/Users/patron/Desktop/R Studio")
+setwd("/Users/tarnampreetkaur/Desktop/Research data/Fall 2024/GitHub/EcoliST131EuropeProject/CountryData")
+getwd()
 
 # List all CSV files in the directory 
 file_list <- list.files(pattern = "*.csv")
@@ -88,7 +90,19 @@ ggplot(summary_data, aes(x = Collection.Year, y = st131_percentage, color = Coun
   )+
   facet_wrap(~Country, ncol=5)
 
-
+# plotting graph ST131 ECOLI/ countries in bar.
+ggplot(summary_data, aes(x = Collection.Year, y = st131_percentage, fill = Country)) +
+  geom_col(position = position_dodge(width = 0.7), linewidth = 1.5) +  
+  scale_y_continuous(
+    limits = c(0, max(summary_data$st131_percentage) * 1.1),  
+    breaks = seq(0, 100, by = 10)  
+  ) +
+  scale_x_continuous(breaks = seq(2010, 2024, by = 2)) +
+  labs(title = "ST131 Percentage in Human Sources (2010-2024)",
+       x = "Year",
+       y = "ST131 Percentage (%)",
+       fill = "Country") +
+  theme_minimal()
 
 
 
