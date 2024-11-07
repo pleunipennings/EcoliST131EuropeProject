@@ -1,0 +1,64 @@
+---
+title: "Final Code"
+author: "Sara"
+date: "2024-10-21"
+output: html_document
+---
+
+```{r}
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+
+# Step 1: Set the working directory to where your CSV files are stored
+setwd("C:/Users/patron/Desktop/R Studio")
+
+# Step 2: List all CSV files in the directory
+file_list <- list.files(pattern = "\\.csv$")
+
+# Step 3: Create an empty list to store data frames
+data_list <- list()
+
+# Step 4: Loop through each file and read the CSV
+for (file in file_list) {
+  # Read the CSV file
+  data <- read.csv(file)
+  
+  # Add a column to track the country based on the file name
+  country_name <- gsub(".csv", "", file)
+  data$Country <- country_name
+  
+  # Store the data frame in the list
+  data_list[[file]] <- data
+}
+
+# Step 5: Combine all the data frames into one large data frame
+combined_data <- do.call(rbind, data_list)
+
+# Step 6: Filter for human data and the years 2010-2024
+filtered_data <- combined_data %>%
+  filter(Source.Type == "Human", Collection.Year >= 2010, Collection.Year <= 2024)
+
+# Step 7: Group and calculate the percentage of ST131 for each country per year
+summary_data <- filtered_data %>%
+  group_by(Country, Collection.Year) %>%
+  summarise(
+    total_human = n(),
+    st131_count = sum(ST == "ST131"),
+    st131_percentage = (st131_count / total_human) * 100
+  )
+
+# Step 8: Create a simple line graph for each country
+ggplot(summary_data, aes(x = Collection.Year, y = st131_percentage, color = Country, group = Country)) +
+  geom_line(size = 1.2) +  # Line graph
+  labs(title = "ST131 Percentage in Human Sources (2010-2024)",
+       x = "Year",
+       y = "ST131 Percentage") + 
+  theme_minimal()
+
+# Step 9: Save the graph
+ggsave("st131_countries_line_graph.png")
+
+
+```
+
